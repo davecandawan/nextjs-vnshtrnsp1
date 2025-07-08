@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
+import StateSelection from '../StateSelection/StateSelection';
 
 const VidalyticsVideo = dynamic(() => import('../VidalyticsVideo/VidalyticsVideo'), {
   ssr: false,
@@ -30,21 +31,18 @@ const Content: React.FC<ContentProps> = ({
 
   return (
     <div className="min-h-screen bg-[url('/bg.webp')] bg-cover bg-fixed bg-repeat bg-center">
-      <div className="sticky top-0 left-0 right-0 w-full bg-custom-green text-black text-center py-2 px-4 text-[1.3rem] sm:text-[1.5rem] font-semibold z-50 shadow-md">
-        FREE $39 QuickDraw Gun Magnet With Every Order!
-      </div>
       <div className="w-full max-w-[1140px] mx-auto px-5 py-4 lg:px-20 bg-white">
         <div className="space-y-8">
           <header className="text-center py-1">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal leading-snug md:leading-tight mb-4 px-2">
-              <span className="font-bold italic">Insanely Comfy Holster</span> Makes Any Semi-Auto
-              (Plus 2 Extra Mags) <span className="font-bold italic">Disappear In Plain Sight</span>{' '}
-              Even If You Wear
-              <span className="underline"> Nothing But Gym Shorts, Sweatpants and T-Shirts!</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal leading-snug md:leading-tight mb-4 px-2 italic">
+              Attention Gun Owners:{' '}
+              <span className="font-bold">
+                "You DON'T Have to Be a Criminal to Get Thrown In Jail"
+              </span>
             </h1>
             <span className="text-xl md:text-2xl font-semibold text-red-600 px-4 pt-1 pb-0 inline-block italic">
-              <span className="bg-[#ff0] px-1 py-1">
-                Guaranteed Comfort Or 100% Of Your Money Back!
+              <span className="bg-[#ff0] px-1 py-1 italic">
+                See Where You’re Exposed and How to Protect Yourself And Your Family
               </span>
             </span>
           </header>
@@ -52,23 +50,12 @@ const Content: React.FC<ContentProps> = ({
           <div className="w-full max-w-4xl mx-auto -mt-4">
             <VidalyticsVideo />
           </div>
+          <StateSelection />
 
-          <div className="text-center my-8 md:my-10">
-            <a
-              href={getCheckoutUrl('https://secure.vnsh.com/vns3qdbonus/checkout')}
-              className="inline-block"
-            >
-              <button className="bg-[#28a745] hover:bg-[#218838] text-white font-bold py-4 px-8 text-xl md:py-3 md:px-10 md:text-3xl transition-all duration-300 animate-custom-pulse hover:opacity-100 hover:scale-105 transform">
-                {buttonText}
-              </button>
-            </a>
-          </div>
           <header className="text-center py-1 md:py-6">
             <span className="text-xl md:text-4xl font-bold leading-normal md:leading-[1.4]">
-              <span className="bg-[#ffa500] px-0.5 py-0.5">
-                175,232 Americans Have Trusted Us to Give Them The MOST Comfortable Holster They’ve
-                Ever Worn
-              </span>
+              175,232 Americans Have Trusted Us to Give Them The MOST Comfortable Holster They've
+              Ever Worn...
             </span>
           </header>
 

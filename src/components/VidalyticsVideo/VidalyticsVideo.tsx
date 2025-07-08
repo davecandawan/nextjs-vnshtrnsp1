@@ -61,7 +61,7 @@ const VidalyticsVideo = () => {
       const timer = setTimeout(() => {
         // @ts-ignore - We've already checked that Vidalytics exists
         const player = new window.Vidalytics.Embed();
-        player.run('vidalytics_embed_ZeWXTS1Fhz9wtW23');
+        player.run('vidalytics_embed_i5y1U54pnBEf5Ea0');
       }, 100);
 
       return () => clearTimeout(timer);
@@ -103,14 +103,14 @@ const VidalyticsVideo = () => {
                         window.dispatchEvent(new Event('vidalytics:loaded'));
                     });
                 });
-            })(window, document, 'Vidalytics', 'vidalytics_embed_ZeWXTS1Fhz9wtW23', 'https://quick.vidalytics.com/embeds/IgKBDqAD/ZeWXTS1Fhz9wtW23/');
+            })(window, document, 'Vidalytics', 'vidalytics_embed_i5y1U54pnBEf5Ea0', 'https://quick.vidalytics.com/embeds/IgKBDqAD/i5y1U54pnBEf5Ea0/');
           `,
         }}
       />
 
       {/* Video container */}
       <div
-        id="vidalytics_embed_ZeWXTS1Fhz9wtW23"
+        id="vidalytics_embed_i5y1U54pnBEf5Ea0"
         ref={videoContainerRef}
         className="relative w-full h-full min-h-[300px]"
       />

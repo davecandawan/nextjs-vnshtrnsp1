@@ -346,7 +346,7 @@ const OfferSelection: React.FC<OfferSelectionProps> = props => {
               * Not available in every state. Please{' '}
               <a
                 href="#state-selection-header"
-                className="text-blue-600 cursor-pointer"
+                className="text-blue-500 cursor-pointer"
                 onClick={e => {
                   e.preventDefault();
                   // Call the reset handler

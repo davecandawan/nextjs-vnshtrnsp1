@@ -92,8 +92,8 @@ const Footer: React.FC = () => {
           <div className="box-border min-w-[250px] max-w-6xl mx-auto px-4 flex flex-wrap justify-around gap-6">
             <FooterColumn
               imgUrl="/contentimages/vnsh_money_back_guarantee_footer.webp"
-              title="60-Day Money Back Guarantee"
-              text="No question asked 60 day refund or replacement guaranteed. If you are unhappy for any reason, get your money back. Rock solid guarantee..."
+              title="Cancel Anytime"
+              text="Cancel anytime with our hassle-free one-click cancellation if you wish to cancel your membership for any reason."
             />
             <FooterColumn
               imgUrl="/contentimages/vnsh_small_business_footer.webp"

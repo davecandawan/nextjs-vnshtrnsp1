@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import Image from 'next/image';
 
 const UNSUPPORTED_STATES = [
@@ -25,7 +25,7 @@ const UNSUPPORTED_STATES = [
   'GA',
   'AZ',
   'MI',
-  'VA',
+  'VA'
 ];
 
 const STATE_NAMES: { [key: string]: string } = {
@@ -81,7 +81,15 @@ const STATE_NAMES: { [key: string]: string } = {
   WY: 'Wyoming',
 };
 
-const StateSelection: React.FC = () => {
+interface StateSelectionProps {
+  onStateSelect?: (state: string) => void;
+}
+
+interface StateSelectionRef {
+  resetSelection: () => void;
+}
+
+const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(({ onStateSelect }, ref) => {
   const [selectedState, setSelectedState] = useState<string>('');
   const [showUnsupported, setShowUnsupported] = useState<boolean>(false);
   const [showSupported, setShowSupported] = useState<boolean>(false);
@@ -90,21 +98,23 @@ const StateSelection: React.FC = () => {
   const getStateName = (stateCode: string) => {
     if (!stateCode) return 'your state';
     const stateName = STATE_NAMES[stateCode];
-    console.log('State Code:', stateCode, 'State Name:', stateName);
-    return stateName || stateCode; // Return code if name not found
+    return stateName || stateCode;
   };
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const stateCode = e.target.value;
     setSelectedState(stateCode);
+    if (onStateSelect) {
+      onStateSelect(stateCode);
+    }
 
     if (!stateCode) {
       setShowUnsupported(false);
       setShowSupported(false);
-      return;
-    }
-
-    if (UNSUPPORTED_STATES.includes(stateCode)) {
+      if (onStateSelect) {
+        onStateSelect('');
+      }
+    } else if (UNSUPPORTED_STATES.includes(stateCode)) {
       setShowUnsupported(true);
       setShowSupported(false);
     } else {
@@ -117,14 +127,26 @@ const StateSelection: React.FC = () => {
     setSelectedState('');
     setShowUnsupported(false);
     setShowSupported(false);
+    if (onStateSelect) {
+      onStateSelect('');
+    }
   };
 
-  const handleGoBack = resetSelection;
+  const handleGoBack = () => {
+    resetSelection();
+    setSelectedState(prev => prev === '' ? ' ' : '');
+  };
+
+  // Expose the resetSelection method via ref
+  useImperativeHandle(ref, () => ({
+    resetSelection
+  }));
+
   return (
     <div className="w-full bg-white py-1">
       {!showUnsupported && !showSupported ? (
         <>
-          <p className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4">
+          <p id="state-selection-header" className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4">
             Protect Yourself and Your Family Today. Simply Select Your State and Desired Tier Below
             (takes less than one minute):
           </p>
@@ -134,7 +156,7 @@ const StateSelection: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                   <div className="text-xl md:text-2xl font-medium whitespace-nowrap md:mr-6">
                     <span className="font-bold text-[#ff0000]">Step 1:</span>{' '}
-                    <span className="text-black font-semibold">Select Your State</span>
+                    <span className="text-black font-bold">Select Your State</span>
                   </div>
                   <select
                     className="w-[70%] sm:w-auto min-w-[280px] p-3 border border-[#008000] rounded-md focus:ring-2 focus:ring-[#008000] focus:border-transparent bg-[#008000] text-white text-lg"
@@ -452,7 +474,7 @@ const StateSelection: React.FC = () => {
 
               <div className="text-[19px] md:text-2xl text-center font-medium pt-4 mt-4 leading-tight">
                 <span className="font-bold text-[#ff0000]">Step 2:</span>{' '}
-                <span className="text-black font-semibold">
+                <span className="text-black font-bold">
                   Select Your Tier Below. All Tiers Come with Access to Our Advanced Ready Network
                   Video Training Series and $25 in FREE Ammo.
                 </span>
@@ -462,7 +484,7 @@ const StateSelection: React.FC = () => {
         </>
       ) : showUnsupported ? (
         <div className="max-w-4xl mx-auto p-4 sm:p-6 -mt-4 sm:mt-1 text-center">
-          <p className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4 text-[#ff0000]">
+          <p id="state-selection-header" className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4 text-[#ff0000]">
             We're sorry our services don't currently include the state of{' '}
             {getStateName(selectedState)}.
           </p>
@@ -498,7 +520,7 @@ const StateSelection: React.FC = () => {
               }}
               className="underline text-black hover:text-black"
             >
-              Click here
+              <span className="font-bold">Click here</span>
             </a>{' '}
             to go back and select another state.
           </p>
@@ -521,6 +543,6 @@ const StateSelection: React.FC = () => {
       )}
     </div>
   );
-};
+});
 
 export default StateSelection;

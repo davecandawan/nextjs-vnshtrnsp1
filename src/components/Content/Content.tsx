@@ -1,9 +1,23 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
+import type { ComponentType } from 'react';
 import StateSelection from '../StateSelection/StateSelection';
+
+const OfferSelection = dynamic<{
+  isStateSupported: boolean | null;
+  onResetSelection?: () => void;
+  handleGoBack?: () => void;
+}>(
+  () => import('../OfferSelection/OfferSelection'), 
+  { ssr: false }
+) as ComponentType<{
+  isStateSupported: boolean | null;
+  onResetSelection?: () => void;
+  handleGoBack?: () => void;
+}>;
 
 const VidalyticsVideo = dynamic(() => import('../VidalyticsVideo/VidalyticsVideo'), {
   ssr: false,
@@ -17,9 +31,41 @@ interface ContentProps {
   buttonText?: string;
 }
 
-const Content: React.FC<ContentProps> = ({
-  buttonText = 'Give Me My VNSH Holster + FREE QuickDraw Gun Magnet',
-}) => {
+const UNSUPPORTED_STATES: string[] = [
+  'AK',
+  'HI',
+  'MA',
+  'NJ',
+  'NY',
+  'OR',
+  'AL',
+  'AR',
+  'ME',
+  'MD',
+  'MT',
+  'NE',
+  'NV',
+  'RI',
+  'TN',
+  'VT',
+  'WI',
+  'CT',
+  'WA',
+  'FL',
+  'GA',
+  'AZ',
+  'MI',
+  'VA',
+];
+
+const Content: React.FC<ContentProps> = ({ buttonText }) => {
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const stateSelectionRef = useRef<{ resetSelection: () => void }>(null);
+  
+  const handleResetSelection = useCallback(() => {
+    setSelectedState('');
+    stateSelectionRef.current?.resetSelection();
+  }, []);
   const searchParams = useSearchParams();
 
   // Get all current URL parameters
@@ -31,7 +77,7 @@ const Content: React.FC<ContentProps> = ({
 
   return (
     <div className="min-h-screen bg-[url('/bg.webp')] bg-cover bg-fixed bg-repeat bg-center">
-      <div className="w-full max-w-[1140px] mx-auto px-5 py-4 lg:px-20 bg-white">
+      <div className="w-full max-w-[1200px] mx-auto px-5 py-4 lg:px-20 bg-white">
         <div className="space-y-8">
           <header className="text-center py-1">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal leading-snug md:leading-tight mb-4 px-2 italic">
@@ -50,25 +96,115 @@ const Content: React.FC<ContentProps> = ({
           <div className="w-full max-w-4xl mx-auto -mt-4">
             <VidalyticsVideo />
           </div>
-          <StateSelection />
-
-          <header className="text-center py-1 md:py-6">
-            <span className="text-xl md:text-4xl font-bold leading-normal md:leading-[1.4]">
-              175,232 Americans Have Trusted Us to Give Them The MOST Comfortable Holster They've
-              Ever Worn...
+          <StateSelection 
+            onStateSelect={setSelectedState}
+            ref={stateSelectionRef}
+          />
+          <OfferSelection
+            isStateSupported={!selectedState ? null : !UNSUPPORTED_STATES.includes(selectedState)}
+            onResetSelection={handleResetSelection}
+            handleGoBack={handleResetSelection}
+          />
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Hey there I’m Adam Lantelme, the founder of VNSH.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            I’ve got a really important message for you if you own a firearm and have ever
+            considered using it for self defense.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Doesn’t matter if you conceal carry or not, what I’m about to show you affects you and
+            the people you love.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Sadly, even if you ever use your gun for self defense and do everything right when the
+            time comes to deploy your weapon to stay alive…
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Your life may still be in serious danger..
+          </p>
+          <header className="text-center py-1 px-4 md:py-6 md:px-6 lg:px-15">
+            <span className="text-xl md:text-4xl font-bold leading-normal md:leading-[1.4] text-orange-500">
+              This Shocking Thing Happens to Law-Abiding Gun Owners All The Time
             </span>
           </header>
-
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Here’s what I mean.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            As unfair as it may seem…
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            If you end up shooting someone in defense of yourself or another, even if you were fully
+            justified…
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            The state will force you to appear in court to prove you were the good guy… plus you’ll
+            face the very real possibility of a civil suit from the family of whoever you shot.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            And the cost of proving your innocence can be{' '}
+            <span className="font-bold">devastating.</span>
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            The average amount someone pays to clear their name after a self-defense shooting is
+            $40,000, but it can easily reach into the 100’s of thousands.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            I don’t know about you, but if I was hit with a $40,000 bill I’d be wiped out!
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Just like Stephen Maddox was.
+          </p>
+          <header className="text-center py-1 px-4 md:py-6 md:px-6 lg:px-15">
+            <span className="text-xl md:text-4xl font-bold leading-normal md:leading-[1.4] text-orange-500">
+              The Mistake This Gun Owner Made Ended Cost Him a Fortune - And Almost Sent Him to
+              Prison For Life!
+            </span>
+          </header>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            While it’s hard to say for sure, there’s a good chance that at some point in the past
+            Stephen came across a program like the one I’m about to show you… that he decided NOT to
+            get.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Back in 2015, Stephen found himself in a situation where his life was at risk.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Acting in self-defense, he used his firearm to escape.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            After the shooting Stephen expected that since he’d used his gun in a justified act of
+            self defense he’d go home to his family.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Yet he was handcuffed and put into a squad car and dragged off to the police station.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            When he arrived at the police station...and with a witness telling the police exactly
+            what happened…
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Stephen wasn’t released…
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            He was charged with first-degree murder!
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            The police locked him up and threw him into jail with the most violent criminals...
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Stephen was a patriotic American who used his gun for the right reason... He was trained
+            and ready. He did everything by the book.
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Yet here he was, locked up with real criminals for a crime he didn't commit!
+          </p>
+          <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
+            Despite being found not guilty in the end, he still had to fight for his life in a
+            years-long legal battle, which cost upwards of $300,000.
+          </p>
           <div className="w-full max-w-7xl mx-auto space-y-8">
-            <p className="text-lg md:text-2xl leading-normal">
-              The VNSH Holster is rapidly becoming one of America’s best-selling holsters…{' '}
-              <span className="font-bold">and for good reason too!</span>
-            </p>
-            <p className="text-lg md:text-2xl leading-normal">
-              It’s GUARANTEED to be <span className="font-bold">the most comfortable holster</span>{' '}
-              you’ll ever wear - or you get 100% of your money back! Try it for 60 days, and if you
-              don’t like it for any reason, let us know and we’ll give you every penny back.
-            </p>
             <div className="mx-auto w-full md:max-w-[70%]">
               <Image
                 src="/contentimages/guaranteed_banner.webp"

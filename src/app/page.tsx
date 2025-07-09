@@ -20,7 +20,7 @@ const Footer = dynamic(() => import('@/components/Footer/Footer'), {
 
 const BackgroundWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="w-full bg-[url('/bg.webp')] bg-cover bg-fixed bg-repeat bg-center">
-    <div className="w-full max-w-[1140px] mx-auto px-5 py-1 lg:px-20 bg-white">{children}</div>
+    <div className="w-full max-w-[1200px] mx-auto px-5 py-1 lg:px-20 bg-white">{children}</div>
   </div>
 );
 

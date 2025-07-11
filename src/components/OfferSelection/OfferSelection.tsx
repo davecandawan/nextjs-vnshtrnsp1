@@ -5,11 +5,16 @@ export interface OfferSelectionProps {
   isStateSupported: boolean | null;
   onResetSelection?: () => void;
   handleGoBack?: () => void;
+  scrollTargetId?: string;
   [key: string]: any; // Allow any additional props
 }
 
-const OfferSelection: React.FC<OfferSelectionProps> = props => {
-  const { isStateSupported, onResetSelection, handleGoBack } = props;
+const OfferSelection: React.FC<OfferSelectionProps> = ({
+  isStateSupported,
+  onResetSelection,
+  handleGoBack,
+  scrollTargetId = 'state-selection-header',
+}) => {
   return (
     <div className="w-full pt-8">
       <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -345,7 +350,7 @@ const OfferSelection: React.FC<OfferSelectionProps> = props => {
             <span className="font-bold">
               * Not available in every state. Please{' '}
               <a
-                href="#state-selection-header"
+                href={`#${scrollTargetId}`}
                 className="text-blue-500 cursor-pointer"
                 onClick={e => {
                   e.preventDefault();
@@ -353,10 +358,10 @@ const OfferSelection: React.FC<OfferSelectionProps> = props => {
                   if (onResetSelection) onResetSelection();
                   if (handleGoBack) handleGoBack();
 
-                  // Scroll to the state selection header after a short delay
+                  // Scroll to the target element after a short delay
                   // to ensure the DOM has updated
                   setTimeout(() => {
-                    const element = document.getElementById('state-selection-header');
+                    const element = document.getElementById(scrollTargetId);
                     if (element) {
                       element.scrollIntoView({ behavior: 'smooth' });
                     }

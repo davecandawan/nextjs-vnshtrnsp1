@@ -5,29 +5,32 @@ import '@/styles/globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'VNSH Holster + FREE QuickDraw Gun Magnet',
-  description: 'Premium gun holsters and accessories',
+  title: 'The Ready Network - VNSH',
+  description:
+    'The Ready Network is a membership program that offers protection and empowerment to its members.',
   icons: {
     icon: '/favicon.png',
     apple: '/favicon.png',
   },
   openGraph: {
-    title: 'VNSH Holster + FREE QuickDraw Gun Magnet',
-    description: 'Premium gun holsters and accessories',
+    title: 'The Ready Network - VNSH',
+    description:
+      'The Ready Network is a membership program that offers protection and empowerment to its members.',
     type: 'website',
     images: [
       {
         url: '/favicon.png',
         width: 512,
         height: 512,
-        alt: 'VNSH Holster Logo',
+        alt: 'The Ready Network Logo',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VNSH Holster + FREE QuickDraw Gun Magnet',
-    description: 'Premium gun holsters and accessories',
+    title: 'The Ready Network - VNSH',
+    description:
+      'Th  e Ready Network is a membership program that offers protection and empowerment to its members.',
     images: ['/favicon.png'],
   },
 };

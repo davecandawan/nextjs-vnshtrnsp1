@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import Image from 'next/image';
 
 const UNSUPPORTED_STATES = [
@@ -83,16 +83,27 @@ const STATE_NAMES: { [key: string]: string } = {
 
 interface StateSelectionProps {
   onStateSelect?: (state: string) => void;
+  selectedState?: string | null;
+  id?: string;
 }
 
 interface StateSelectionRef {
-  resetSelection: () => void;
+  resetSelection: (state?: string | null) => void;
 }
 
-const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(({ onStateSelect }, ref) => {
-  const [selectedState, setSelectedState] = useState<string>('');
+const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(
+  ({ onStateSelect, selectedState: externalSelectedState, id }, ref) => {
+  const [selectedState, setSelectedState] = useState<string>(externalSelectedState || '');
   const [showUnsupported, setShowUnsupported] = useState<boolean>(false);
   const [showSupported, setShowSupported] = useState<boolean>(false);
+
+  // Sync with external state when it changes
+  useEffect(() => {
+    if (externalSelectedState !== undefined) {
+      setSelectedState(externalSelectedState || '');
+      updateStateUI(externalSelectedState);
+    }
+  }, [externalSelectedState]);
 
   // Get the full state name
   const getStateName = (stateCode: string) => {
@@ -102,18 +113,16 @@ const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(({ onS
   };
 
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const stateCode = e.target.value;
-    setSelectedState(stateCode);
+    const stateCode = e.target.value || null;
     if (onStateSelect) {
-      onStateSelect(stateCode);
+      onStateSelect(stateCode || '');
     }
+  };
 
+  const updateStateUI = (stateCode: string | null) => {
     if (!stateCode) {
       setShowUnsupported(false);
       setShowSupported(false);
-      if (onStateSelect) {
-        onStateSelect('');
-      }
     } else if (UNSUPPORTED_STATES.includes(stateCode)) {
       setShowUnsupported(true);
       setShowSupported(false);
@@ -123,12 +132,12 @@ const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(({ onS
     }
   };
 
-  const resetSelection = () => {
-    setSelectedState('');
-    setShowUnsupported(false);
-    setShowSupported(false);
+  const resetSelection = (state: string | null = null) => {
+    const newState = state === null || state === undefined ? '' : state;
+    setSelectedState(newState);
+    updateStateUI(newState);
     if (onStateSelect) {
-      onStateSelect('');
+      onStateSelect(newState);
     }
   };
 
@@ -146,7 +155,7 @@ const StateSelection = forwardRef<StateSelectionRef, StateSelectionProps>(({ onS
     <div className="w-full bg-white py-1">
       {!showUnsupported && !showSupported ? (
         <>
-          <p id="state-selection-header" className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4">
+          <p id={id || 'state-selection-header'} className="text-[19px] md:text-4xl font-bold text-center mb-8 leading-tight md:leading-[1.2] max-w-3xl mx-auto px-4">
             Protect Yourself and Your Family Today. Simply Select Your State and Desired Tier Below
             (takes less than one minute):
           </p>

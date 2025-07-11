@@ -1,36 +1,60 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+'use client';
+
+import React, { useState, useCallback, useMemo, memo, useReducer } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import type { ComponentType } from 'react';
 import StateSelection from '../StateSelection/StateSelection';
 
-const OfferSelection = dynamic<{
+// Simple error boundary component for dynamic imports
+const ErrorBoundary: React.FC<{ children: React.ReactNode; fallback: React.ReactNode }> = ({
+  children,
+  fallback,
+}) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleError = () => setHasError(true);
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) return <>{fallback}</>;
+  return <>{children}</>;
+};
+
+// Dynamic imports with proper typing
+interface OfferSelectionProps {
   isStateSupported: boolean | null;
   onResetSelection?: () => void;
   handleGoBack?: () => void;
   scrollTargetId?: string;
-}>(() => import('../OfferSelection/OfferSelection'), { ssr: false }) as ComponentType<{
-  isStateSupported: boolean | null;
-  onResetSelection?: () => void;
-  handleGoBack?: () => void;
-  scrollTargetId?: string;
-}>;
+}
+
+// Dynamic imports with loading states
+const OfferSelection = dynamic<OfferSelectionProps>(
+  () => import('../OfferSelection/OfferSelection'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-64 flex items-center justify-center">
+        <div className="animate-pulse">Loading offers...</div>
+      </div>
+    ),
+  }
+);
 
 const VidalyticsVideo = dynamic(() => import('../VidalyticsVideo/VidalyticsVideo'), {
   ssr: false,
+  loading: () => (
+    <div className="h-64 flex items-center justify-center">
+      <div className="animate-pulse">Loading video...</div>
+    </div>
+  ),
 });
 
-const YotpoReview = dynamic(() => import('../Yotpo/YotpoReview').then(mod => mod.default), {
-  ssr: false,
-});
-
-interface ContentProps {
-  buttonText?: string;
-}
-
-const UNSUPPORTED_STATES: string[] = [
+// Constants
+const UNSUPPORTED_STATES = [
   'AK',
   'HI',
   'MA',
@@ -57,39 +81,192 @@ const UNSUPPORTED_STATES: string[] = [
   'VA',
 ];
 
-const Content: React.FC<ContentProps> = ({ buttonText }) => {
-  const [selectedState, setSelectedState] = useState<string | null>(null);
-  const stateSelectionRefs = useRef<Array<{ resetSelection: (state?: string | null) => void }>>([]);
+interface ContentProps {
+  buttonText?: string;
+}
 
+// State reducer for better state management
+type ContentState = {
+  selectedState: string | null;
+  isLoading: boolean;
+  error: string | null;
+};
+
+type ContentAction =
+  | { type: 'SELECT_STATE'; payload: string | null }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null };
+
+const contentReducer = (state: ContentState, action: ContentAction): ContentState => {
+  switch (action.type) {
+    case 'SELECT_STATE':
+      return { ...state, selectedState: action.payload };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload };
+    default:
+      return state;
+  }
+};
+
+const Content: React.FC<ContentProps> = ({ buttonText }) => {
+  const [state, dispatch] = useReducer(contentReducer, {
+    selectedState: null,
+    isLoading: false,
+    error: null,
+  });
+
+  const { selectedState } = state;
+  const searchParams = useSearchParams();
+
+  // Memoized state selection IDs and other constants
+  const stateSelectionIds = useMemo(
+    () =>
+      ({
+        first: 'state-selection-1',
+        second: 'state-selection-2',
+        third: 'state-selection-3',
+        offer: 'offer-section',
+      }) as const,
+    []
+  );
+
+  // Handlers
   const handleStateSelect = useCallback((state: string) => {
-    setSelectedState(state);
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SELECT_STATE', payload: state });
+      // Scroll to the offer section when state is selected
+      document.getElementById('offer-section')?.scrollIntoView({ behavior: 'smooth' });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to select state. Please try again.' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
   }, []);
 
   const handleResetSelection = useCallback(() => {
-    setSelectedState(null);
+    dispatch({ type: 'SELECT_STATE', payload: null });
   }, []);
 
-  // Generate unique IDs for each StateSelection component
-  const stateSelectionIds = useMemo(
-    () => ({
-      first: 'state-selection-1',
-      second: 'state-selection-2',
-      third: 'state-selection-3',
-    }),
+  // Generate checkout URL with search params
+  const getCheckoutUrl = useCallback(
+    (baseUrl: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      return `${baseUrl}${params.toString() ? `?${params.toString()}` : ''}`;
+    },
+    [searchParams]
+  );
+
+  // Derived state
+  const isStateSupported = useMemo(
+    () => (selectedState ? !UNSUPPORTED_STATES.includes(selectedState) : null),
+    [selectedState]
+  );
+
+  // Optimized scroll handler with intersection observer
+  const scrollToStateSelection = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Add focus for better accessibility
+      element.setAttribute('tabIndex', '-1');
+      element.focus({ preventScroll: true });
+    }
+  }, []);
+
+  // Wrap components with error boundary
+  const SafeOfferSelection = useMemo(
+    () =>
+      function SafeOfferSelectionWrapper(props: OfferSelectionProps) {
+        return (
+          <ErrorBoundary
+            fallback={
+              <div className="h-64 flex items-center justify-center text-red-500">
+                Failed to load offers. Please try again.
+              </div>
+            }
+          >
+            <OfferSelection {...props} />
+          </ErrorBoundary>
+        );
+      },
     []
   );
-  const searchParams = useSearchParams();
 
-  // Get all current URL parameters
-  const getCheckoutUrl = (baseUrl: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const queryString = params.toString();
-    return `${baseUrl}${queryString ? `?${queryString}` : ''}`;
-  };
+  const SafeVidalyticsVideo = useMemo(
+    () =>
+      function SafeVidalyticsVideoWrapper() {
+        return (
+          <ErrorBoundary
+            fallback={
+              <div className="h-64 flex items-center justify-center text-red-500">
+                Failed to load video.
+              </div>
+            }
+          >
+            <VidalyticsVideo />
+          </ErrorBoundary>
+        );
+      },
+    []
+  );
+
+  // Memoized render helper for "Select Your State" CTA
+  const renderStateSelectionCta = useCallback(
+    (id: string) => {
+      const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        scrollToStateSelection(e, id);
+      };
+
+      return (
+        <p className="text-xl md:text-2xl font-bold text-center !mt-6 md:!mt-8 mb-4">
+          &gt;&gt;&gt;{' '}
+          <a
+            href={`#${id}`}
+            className="cursor-pointer"
+            onClick={handleClick}
+            aria-label="Select your state to see if you qualify"
+          >
+            Select Your State
+          </a>{' '}
+          to See if You Qualify &lt;&lt;&lt;
+        </p>
+      );
+    },
+    [scrollToStateSelection]
+  );
+
+  // Show error state if any error occurs
+  if (state.error) {
+    const handleRefresh = () => {
+      window.location.reload();
+    };
+
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]" role="alert">
+        <div className="text-center p-6 max-w-md mx-auto bg-red-50 rounded-lg">
+          <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
+          <p className="text-gray-700 mb-4">{state.error}</p>
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            aria-label="Refresh the page"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="py-4">
+    <div className="py-4" role="main" aria-label="Main content">
       <div className="space-y-8">
+        {/* Header Section */}
         <header className="text-center py-1">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-normal leading-snug md:leading-tight mb-4 px-2 italic">
             Attention Gun Owners:{' '}
@@ -104,20 +281,28 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
           </span>
         </header>
 
+        {/* Video Section */}
         <div className="w-full max-w-4xl mx-auto -mt-4">
-          <VidalyticsVideo />
+          <SafeVidalyticsVideo />
         </div>
-        <StateSelection
-          id={stateSelectionIds.first}
-          onStateSelect={handleStateSelect}
-          selectedState={selectedState}
-        />
-        <OfferSelection
-          isStateSupported={!selectedState ? null : !UNSUPPORTED_STATES.includes(selectedState)}
-          onResetSelection={handleResetSelection}
-          handleGoBack={handleResetSelection}
-          scrollTargetId={stateSelectionIds.first}
-        />
+        {/* State Selection Section */}
+        <section id={stateSelectionIds.first} className="scroll-mt-20">
+          <StateSelection
+            id={stateSelectionIds.first}
+            onStateSelect={handleStateSelect}
+            selectedState={selectedState}
+          />
+        </section>
+
+        {/* Offer Selection Section */}
+        <section className="mt-8">
+          <SafeOfferSelection
+            isStateSupported={isStateSupported}
+            onResetSelection={handleResetSelection}
+            handleGoBack={handleResetSelection}
+            scrollTargetId={stateSelectionIds.first}
+          />
+        </section>
         <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
           Hey there I’m Adam Lantelme, the founder of VNSH.
         </p>
@@ -259,22 +444,7 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
           VNSH customers (as well as anyone else who carries) from the potentially life-ruining cost
           of defending yourself after a self-defense shooting.
         </p>
-        <p className="text-xl md:text-2xl font-bold text-center !mt-6 md:!mt-8 mb-4">
-          &gt;&gt;&gt;{' '}
-          <a
-            href={`#${stateSelectionIds.first}`}
-            className="cursor-pointer hover:underline"
-            onClick={e => {
-              e.preventDefault();
-              document
-                .getElementById(stateSelectionIds.first)
-                ?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            Select Your State
-          </a>{' '}
-          to See if You Qualify &lt;&lt;&lt;
-        </p>
+        {renderStateSelectionCta(stateSelectionIds.first)}
         <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
           When you join <span className="font-bold">The Ready Network</span>, you’ll be given access
           to a program that covers ALL of your legal fees in case you use a gun – or any other legal
@@ -397,22 +567,7 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
           But instead of paying $1,500… you get access to Chad’s training bundled right into your{' '}
           <span className="font-bold">The Ready Network</span> membership.
         </p>
-        <p className="text-xl md:text-2xl font-bold text-center !mt-6 md:!mt-8 mb-4">
-          &gt;&gt;&gt;{' '}
-          <a
-            href={`#${stateSelectionIds.first}`}
-            className="cursor-pointer hover:underline"
-            onClick={e => {
-              e.preventDefault();
-              document
-                .getElementById(stateSelectionIds.first)
-                ?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            Select Your State
-          </a>{' '}
-          to See if You Qualify &lt;&lt;&lt;
-        </p>
+        {renderStateSelectionCta(stateSelectionIds.first)}
         <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
           In fact, as soon as you join we’ll email you the course I made with him. Once you complete
           it, you’ll get a Free gift from me as a way of saying “thanks.”
@@ -548,22 +703,7 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
           <span className="font-bold">The Ready Network</span> members get DEEP discounts to all of
           those stores too.
         </p>
-        <p className="text-xl md:text-2xl font-bold text-center !mt-6 md:!mt-8 mb-4">
-          &gt;&gt;&gt;{' '}
-          <a
-            href={`#${stateSelectionIds.first}`}
-            className="cursor-pointer hover:underline"
-            onClick={e => {
-              e.preventDefault();
-              document
-                .getElementById(stateSelectionIds.first)
-                ?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            Select Your State
-          </a>{' '}
-          to See if You Qualify &lt;&lt;&lt;
-        </p>
+        {renderStateSelectionCta(stateSelectionIds.first)}
         <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
           And one more awesome perk you get access to is a partnership we have called the United
           Savings Association powered by Abenity.
@@ -594,8 +734,10 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
             width={1120}
             height={600}
             priority
+            loading="eager"
           />
         </div>
+
         <p className="text-lg md:text-[22px] leading-normal !mt-4 md:!mt-5">
           With the <span className="font-bold">The Ready Network</span> and its included perks
           program you will get
@@ -786,4 +928,8 @@ const Content: React.FC<ContentProps> = ({ buttonText }) => {
   );
 };
 
-export default Content;
+// Memoize the component to prevent unnecessary re-renders
+export default memo(Content, (prevProps: ContentProps, nextProps: ContentProps) => {
+  // Only re-render if buttonText changes
+  return prevProps.buttonText === nextProps.buttonText;
+});

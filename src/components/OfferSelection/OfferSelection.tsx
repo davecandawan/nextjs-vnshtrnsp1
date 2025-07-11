@@ -25,10 +25,9 @@ const OfferSelection: React.FC<OfferSelectionProps> = ({
               <Image
                 src="/contentimages/LowerPrice.webp"
                 alt="Individual Basic"
-                layout="responsive"
                 width={400}
                 height={400}
-                className="tier-image"
+                className="tier-image w-full h-auto"
                 priority
               />
             </div>
@@ -127,10 +126,9 @@ const OfferSelection: React.FC<OfferSelectionProps> = ({
               <Image
                 src="/contentimages/MostPopular.webp"
                 alt="Individual Premium"
-                layout="responsive"
                 width={400}
                 height={400}
-                className="tier-image"
+                className="tier-image w-full h-auto"
                 priority
               />
             </div>
@@ -232,10 +230,9 @@ const OfferSelection: React.FC<OfferSelectionProps> = ({
               <Image
                 src="/contentimages/BestProtection.webp"
                 alt="Family Plan"
-                layout="responsive"
                 width={400}
                 height={400}
-                className="tier-image"
+                className="tier-image w-full h-auto"
                 priority
               />
             </div>

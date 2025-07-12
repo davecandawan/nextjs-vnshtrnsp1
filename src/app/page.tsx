@@ -22,8 +22,8 @@ const BackgroundWrapper = ({ children }: { children: React.ReactNode }) => (
 export default function Home() {
   return (
     <>
+      <Navbar />
       <BackgroundWrapper>
-        <Navbar />
         <main className="min-h-screen">
           <Content />
           <Footer />

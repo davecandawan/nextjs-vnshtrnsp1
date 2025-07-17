@@ -7,33 +7,32 @@ interface FooterColumnProps {
   title: string;
   text: string;
   imgWidth?: string;
+  isSmaller?: boolean;
 }
 
-const FooterColumn: React.FC<FooterColumnProps> = ({ imgUrl, title, text, imgWidth = '150' }) => {
-  // Calculate image height to maintain aspect ratio with larger size
-  const aspectRatio = 100 / parseInt(imgWidth);
-  const imageHeight = 200 * aspectRatio; // Increased from 160 to 200
-
+const FooterColumn: React.FC<FooterColumnProps> = ({ imgUrl, title, text, isSmaller = false }) => {
   return (
-    <div className="flex-1 min-w-[250px] max-w-[350px] p-4 text-center">
-      <div className="h-full flex flex-col items-center">
-        <div
-          className="w-full flex items-center justify-center"
-          style={{ height: `${imageHeight}px` }}
-        >
-          <div className="relative w-full max-w-[200px] h-full">
+    <div className="flex-1 min-w-[250px] max-w-[350px] p-4 text-center flex flex-col h-full">
+      <div className="flex-1 flex flex-col items-center justify-between">
+        <div className="w-full flex justify-center" style={{ minHeight: '160px', alignItems: 'center' }}>
+          <div className={`relative ${isSmaller ? 'w-[200px]' : 'w-[250px]'}`} style={{ aspectRatio: '250/160' }}>
             <Image
               src={imgUrl}
               alt={title}
-              width={200}
-              height={imageHeight}
+              width={isSmaller ? 200 : 250}
+              height={isSmaller ? 128 : 160}
               className="w-full h-full object-contain"
-              style={{ objectPosition: 'center' }}
+              quality={100}
+              priority
+              unoptimized={process.env.NODE_ENV !== 'production'}
+              sizes={isSmaller ? '(max-width: 768px) 120px, 150px' : '(max-width: 768px) 180px, 250px'}
             />
           </div>
         </div>
-        <h3 className="text-lg font-bold mt-4 mb-2 text-gray-800 whitespace-nowrap">{title}</h3>
-        <p className="text-gray-600 text-sm leading-relaxed">{text}</p>
+        <div className="w-full mt-4">
+          <h3 className="text-lg font-bold mb-2 text-black whitespace-nowrap">{title}</h3>
+          <p className="text-black text-base leading-tight">{text}</p>
+        </div>
       </div>
     </div>
   );
@@ -47,7 +46,7 @@ interface FooterLinkProps {
 
 const FooterLink: React.FC<FooterLinkProps> = ({ label, id, onClick }) => (
   <a
-    className="text-gray-800 cursor-pointer hover:text-blue-600 transition-colors duration-300 mx-2"
+    className="text-black cursor-pointer hover:text-black transition-colors duration-300 mx-2"
     onClick={e => {
       e.preventDefault();
       onClick(id);
@@ -58,14 +57,9 @@ const FooterLink: React.FC<FooterLinkProps> = ({ label, id, onClick }) => (
 );
 
 const FooterLinks: React.FC<{ loadInfo: (id: string) => void }> = ({ loadInfo }) => (
-  <div className="w-full text-base text-center py-1 flex flex-wrap justify-center items-center gap-2">
+  <div className="w-full text-lg text-center flex flex-wrap justify-center items-center space-x-4">
     <FooterLink label="Terms & Disclaimer" id="terms-pop-modal" onClick={loadInfo} />
-    <span className="text-gray-300 select-none">|</span>
     <FooterLink label="Privacy Policy" id="privacy-policy-modal" onClick={loadInfo} />
-    <span className="text-gray-300 select-none">|</span>
-    <FooterLink label="Shipping Policy" id="shipping-policy-modal" onClick={loadInfo} />
-    <span className="text-gray-300 select-none">|</span>
-    <FooterLink label="Return Policy" id="return-policy-modal" onClick={loadInfo} />
   </div>
 );
 
@@ -87,7 +81,7 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="w-full mt-2 bg-white">
-      <div className="py-8 text-gray-800 bg-white">
+      <div className="py-8 text-black bg-white">
         <div className="py-4">
           <div className="box-border min-w-[250px] max-w-6xl mx-auto px-4 flex flex-wrap justify-around gap-6">
             <FooterColumn
@@ -104,14 +98,17 @@ const Footer: React.FC = () => {
               imgUrl="/contentimages/vnsh_secure_payment_footer.webp"
               title="100% Secure Payment"
               text="All orders are AES-256 Bit encrypted through a HTTPS secure network. We respect your privacy..."
+              isSmaller
             />
           </div>
         </div>
 
-        <div className="text-center text-gray-600 py-1">
-          © <b>2025 VNSH.com</b> All Rights Reserved.
+        <div className="flex flex-col items-center">
+          <div className="text-center text-black">
+            © <b>2025 VNSH.com</b> All Rights Reserved.
+          </div>
+          <FooterLinks loadInfo={loadInfo} />
         </div>
-        <FooterLinks loadInfo={loadInfo} />
       </div>
 
       {showModal && (
@@ -121,7 +118,7 @@ const Footer: React.FC = () => {
             onClick={e => e.stopPropagation()}
           >
             <button
-              className="absolute top-4 right-4 text-2xl text-gray-500 hover:text-gray-800 bg-transparent border-none hover:bg-transparent"
+              className="absolute top-4 right-4 text-2xl text-black hover:text-black bg-transparent border-none hover:bg-transparent"
               onClick={closeModal}
               aria-label="Close modal"
             >

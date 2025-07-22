@@ -18,7 +18,7 @@ const FooterModal: React.FC<FooterModalProps> = ({ modalId, closeModal }) => {
             <div className="border-b border-gray-200 pb-4 mb-4">
               <h2 className="text-2xl font-bold text-gray-800">Terms &amp; Disclaimer</h2>
             </div>
-            <div className="prose max-w-none">
+            <div className="prose max-w-none leading-tight">
               <p className="font-semibold">Effective Date: January 1st, 2019</p>
               <p className="mb-4">
                 To review material modifications and their effective dates scroll to the bottom of
@@ -455,7 +455,7 @@ const FooterModal: React.FC<FooterModalProps> = ({ modalId, closeModal }) => {
             <div className="border-b border-gray-200 pb-4 mb-4">
               <h2 className="text-2xl font-bold text-gray-800">Privacy Policy</h2>
             </div>
-            <div className="prose max-w-none space-y-4 text-gray-700">
+            <div className="prose max-w-none space-y-4 text-gray-700 leading-tight">
               <p className="font-semibold">Effective Date: January 1st, 2019</p>
               <p>
                 To review material modifications and their effective dates scroll to the bottom of

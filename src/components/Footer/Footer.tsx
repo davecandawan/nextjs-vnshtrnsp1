@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import FooterModal from './FooterModal';
 
@@ -14,8 +14,14 @@ const FooterColumn: React.FC<FooterColumnProps> = ({ imgUrl, title, text, isSmal
   return (
     <div className="flex-1 min-w-[250px] max-w-[350px] p-4 text-center flex flex-col h-full">
       <div className="flex-1 flex flex-col items-center justify-between">
-        <div className="w-full flex justify-center" style={{ minHeight: '160px', alignItems: 'center' }}>
-          <div className={`relative ${isSmaller ? 'w-[200px]' : 'w-[250px]'}`} style={{ aspectRatio: '250/160' }}>
+        <div
+          className="w-full flex justify-center"
+          style={{ minHeight: '160px', alignItems: 'center' }}
+        >
+          <div
+            className={`relative ${isSmaller ? 'w-[200px]' : 'w-[250px]'}`}
+            style={{ aspectRatio: '250/160' }}
+          >
             <Image
               src={imgUrl}
               alt={title}
@@ -25,12 +31,14 @@ const FooterColumn: React.FC<FooterColumnProps> = ({ imgUrl, title, text, isSmal
               quality={100}
               priority
               unoptimized={process.env.NODE_ENV !== 'production'}
-              sizes={isSmaller ? '(max-width: 768px) 120px, 150px' : '(max-width: 768px) 180px, 250px'}
+              sizes={
+                isSmaller ? '(max-width: 768px) 120px, 150px' : '(max-width: 768px) 180px, 250px'
+              }
             />
           </div>
         </div>
         <div className="w-full mt-4">
-          <h3 className="text-lg font-bold mb-2 text-black whitespace-nowrap">{title}</h3>
+          <h3 className="text-lg font-extrabold mb-2 text-black whitespace-nowrap">{title}</h3>
           <p className="text-black text-base leading-tight">{text}</p>
         </div>
       </div>
@@ -66,23 +74,36 @@ const FooterLinks: React.FC<{ loadInfo: (id: string) => void }> = ({ loadInfo })
 const Footer: React.FC = () => {
   const [modalId, setModalId] = useState<string>('');
   const [showModal, setShowModal] = useState<boolean>(false);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (showModal) {
+      // Small delay to ensure the modal is in the DOM before starting animation
+      timeout = setTimeout(() => {
+        setIsAnimating(true);
+      }, 10);
+    }
+    return () => clearTimeout(timeout);
+  }, [showModal]);
 
   const loadInfo = (id: string) => {
     setModalId(id);
     setShowModal(true);
-    document.body.style.overflow = 'hidden';
   };
 
   const closeModal = () => {
-    setShowModal(false);
-    setModalId('');
-    document.body.style.overflow = 'auto';
+    setIsAnimating(false);
+    setTimeout(() => {
+      setShowModal(false);
+      setModalId('');
+    }, 300); // Match this with the transition duration
   };
 
   return (
     <footer className="w-full mt-2 bg-white">
-      <div className="py-8 text-black bg-white">
-        <div className="py-4">
+      <div className="pt-1 pb-8 text-black bg-white">
+        <div className="pt-1 pb-4">
           <div className="box-border min-w-[250px] max-w-6xl mx-auto px-4 flex flex-wrap justify-around gap-6">
             <FooterColumn
               imgUrl="/contentimages/vnsh_money_back_guarantee_footer.webp"
@@ -112,9 +133,13 @@ const Footer: React.FC = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 pt-20" onClick={closeModal}>
+        <div
+          className={`fixed inset-0 z-50 p-4 pt-20 flex items-start justify-center transition-opacity duration-200 ease-out ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={closeModal}
+        >
           <div
-            className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto relative p-6 mx-auto"
+            className={`bg-white rounded-lg max-w-4xl w-full max-h-[100vh] overflow-y-auto relative p-6 mx-auto transform transition-all duration-300 ease-out ${isAnimating ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}
             onClick={e => e.stopPropagation()}
           >
             <button
